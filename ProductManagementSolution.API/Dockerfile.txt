@@ -1,0 +1,27 @@
+﻿# بنحدد إننا شغالين بـ .NET 8
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+WORKDIR /app
+EXPOSE 80
+
+# بنجيب الـ SDK عشان نبني الكود (Build)
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+# بننسخ ملفات الـ Project ونعمل Restore للمكتبات
+COPY ["ProductManagementSolution.API/ProductManagementSolution.API.csproj", "ProductManagementSolution.API/"]
+COPY ["ProductManagementSolution.Application/ProductManagementSolution.Application.csproj", "ProductManagementSolution.Application/"]
+COPY ["ProductManagementSolution.Domain/ProductManagementSolution.Domain.csproj", "ProductManagementSolution.Domain/"]
+COPY ["ProductManagementSolution.Infrastructure/ProductManagementSolution.Infrastructure.csproj", "ProductManagementSolution.Infrastructure/"]
+
+RUN dotnet restore "ProductManagementSolution.API/ProductManagementSolution.API.csproj"
+
+# بننسخ كل الكود ونعمل Publish
+COPY . .
+WORKDIR "/src/ProductManagementSolution.API"
+RUN dotnet publish "ProductManagementSolution.API.csproj" -c Release -o /app/publish
+
+# المرحلة النهائية: تشغيل الـ DLL اللي طلع
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "ProductManagementSolution.API.dll"]

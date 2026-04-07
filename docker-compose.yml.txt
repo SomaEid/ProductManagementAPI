@@ -1,0 +1,24 @@
+version: '3.4'
+
+services:
+  # خدمة الداتابيز
+  product-db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=YourStrongPassword123!
+    ports:
+      - "1433:1433"
+
+  # خدمة الـ API بتاعك
+  product-api:
+    image: product-api-image
+    build:
+      context: .
+      dockerfile: ProductManagementSolution.API/Dockerfile
+    ports:
+      - "5000:80" # هيفتح الـ API على بورت 5000
+    depends_on:
+      - product-db
+    environment:
+      - ConnectionStrings__DefaultConnection=Server=product-db;Database=ProductDb;User Id=sa;Password=YourStrongPassword123!;TrustServerCertificate=True;
